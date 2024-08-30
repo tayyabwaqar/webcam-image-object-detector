@@ -120,45 +120,59 @@ if option == "Use Webcam":
         st.session_state.webcam_running = False
 
     FRAME_WINDOW = st.image([])
-    camera = cv2.VideoCapture(0)
 
     # For FPS calculation
     frame_times = deque(maxlen=30)
 
     if start_button:
         st.session_state.webcam_running = True
+        # Try to open the camera
+        camera = cv2.VideoCapture(0)
+        if not camera.isOpened():
+            st.error("Unable to access the webcam. This feature may not be available in the current environment.")
+            st.session_state.webcam_running = False
 
     if stop_button:
         st.session_state.webcam_running = False
-        camera.release()
+        if 'camera' in locals():
+            camera.release()
         st.write('Webcam stopped')
 
     while st.session_state.webcam_running:
-        _, frame = camera.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        start_time = time.time()
-        
-        results = model(frame, stream=True)
-        frame, detections = process_frame(frame, results)
+        try:
+            ret, frame = camera.read()
+            if not ret:
+                st.error("Failed to capture frame from webcam.")
+                break
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            start_time = time.time()
+            
+            results = model(frame, stream=True)
+            frame, detections = process_frame(frame, results)
 
-        # Calculate FPS
-        end_time = time.time()
-        frame_time = end_time - start_time
-        frame_times.append(frame_time)
-        fps = 1 / (sum(frame_times) / len(frame_times))
+            # Calculate FPS
+            end_time = time.time()
+            frame_time = end_time - start_time
+            frame_times.append(frame_time)
+            fps = 1 / (sum(frame_times) / len(frame_times))
 
-        # Update statistics
-        st.sidebar.text(f"FPS: {fps:.2f}\nDetections: {sum(detections.values())}")
+            # Update statistics
+            st.sidebar.text(f"FPS: {fps:.2f}\nDetections: {sum(detections.values())}")
 
-        FRAME_WINDOW.image(frame)
+            FRAME_WINDOW.image(frame)
 
-        # Check if the stop button was clicked
-        if stop_button:
+            # Check if the stop button was clicked
+            if stop_button:
+                break
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
             break
 
     if not st.session_state.webcam_running:
         st.write('Webcam is not running. Click "Start" to begin.')
+        if 'camera' in locals():
+            camera.release()
 
 elif option == "Upload Image":
     st.markdown("### Image Upload Object Detection")
