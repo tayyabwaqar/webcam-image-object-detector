@@ -13,6 +13,9 @@ from PIL import Image
 import pandas as pd
 from ultralytics import YOLO
 import time
+from streamlit_webrtc import WebRtcMode, webrtc_streamer
+import av
+import queue
 
 # Set page config at the very beginning
 st.set_page_config(layout="wide", page_title="AI Object Detection", page_icon="🔍")
@@ -65,7 +68,7 @@ np.random.seed(42)
 colors = {name: tuple(map(int, np.random.randint(0, 255, 3))) for name in classNames}
 
 st.title("AI-Powered Object Detection")
-st.markdown("Detect objects in images or through your webcam using state-of-the-art AI technology.")
+st.markdown("Detect objects in images or through your webcam using AI technology.")
 
 # Sidebar
 st.sidebar.title("Settings")
@@ -108,71 +111,32 @@ def process_frame(frame, results):
 
 if option == "Use Webcam":
     st.markdown("### Webcam Object Detection")
-    st.markdown("Click 'Start' to begin real-time object detection using your webcam. Click 'Stop' to end the session.")
+    st.markdown("Click 'Start' to begin real-time object detection using your webcam.")
     
-    # Create two columns for Start and Stop buttons
-    col1, col2 = st.columns(2)
-    start_button = col1.button('Start')
-    stop_button = col2.button('Stop')
+    result_queue = queue.Queue()
+    
+    def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
+        img = frame.to_ndarray(format="rgb24")
+        processed_img, detections = process_frame(img)
+        result_queue.put(detections)
+        return av.VideoFrame.from_ndarray(processed_img, format="rgb24")
 
-    # Initialize session state to keep track of webcam status
-    if 'webcam_running' not in st.session_state:
-        st.session_state.webcam_running = False
+    webrtc_ctx = webrtc_streamer(
+        key="object-detection",
+        mode=WebRtcMode.SENDRECV,
+        video_frame_callback=video_frame_callback,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True,
+    )
 
-    FRAME_WINDOW = st.image([])
-
-    # For FPS calculation
-    frame_times = deque(maxlen=30)
-
-    if start_button:
-        st.session_state.webcam_running = True
-        # Try to open the camera
-        camera = cv2.VideoCapture(0)
-        if not camera.isOpened():
-            st.error("Unable to access the webcam. This feature may not be available in the current environment.")
-            st.session_state.webcam_running = False
-
-    if stop_button:
-        st.session_state.webcam_running = False
-        if 'camera' in locals():
-            camera.release()
-        st.write('Webcam stopped')
-
-    while st.session_state.webcam_running:
-        try:
-            ret, frame = camera.read()
-            if not ret:
-                st.error("Failed to capture frame from webcam.")
-                break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            
-            start_time = time.time()
-            
-            results = model(frame, stream=True)
-            frame, detections = process_frame(frame, results)
-
-            # Calculate FPS
-            end_time = time.time()
-            frame_time = end_time - start_time
-            frame_times.append(frame_time)
-            fps = 1 / (sum(frame_times) / len(frame_times))
-
-            # Update statistics
-            st.sidebar.text(f"FPS: {fps:.2f}\nDetections: {sum(detections.values())}")
-
-            FRAME_WINDOW.image(frame)
-
-            # Check if the stop button was clicked
-            if stop_button:
-                break
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-            break
-
-    if not st.session_state.webcam_running:
-        st.write('Webcam is not running. Click "Start" to begin.')
-        if 'camera' in locals():
-            camera.release()
+    if webrtc_ctx.state.playing:
+        labels_placeholder = st.empty()
+        while True:
+            try:
+                result = result_queue.get(timeout=1.0)
+                labels_placeholder.table(pd.DataFrame(list(result.items()), columns=["Object", "Count"]))
+            except queue.Empty:
+                continue
 
 elif option == "Upload Image":
     st.markdown("### Image Upload Object Detection")
