@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **AI-Powered Object Detection App** is a web application built with Streamlit and YOLOv8, designed for real-time object detection in images and video streams. This app leverages AI technology to identify and label various objects in both uploaded images and live webcam feeds.
+The **AI-Powered Object Detection App** is a web application built with Streamlit and YOLO, designed for real-time object detection in images and video streams. This app leverages AI technology to identify and label various objects in both uploaded images and live webcam feeds.
 
 ## Live Demo
 
@@ -30,7 +30,7 @@ You can try the live demo of the application at the following link:
 To run the app locally, clone the repository and install the required dependencies:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/tayyabwaqar/webcam-image-object-detector
 cd <repository-directory>
 pip install -r requirements.txt
 streamlit run app.py
