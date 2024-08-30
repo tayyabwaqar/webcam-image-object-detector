@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+c# -*- coding: utf-8 -*-
 """
 Created on Fri Aug 30 13:05:47 2024
 
@@ -16,7 +16,7 @@ from PIL import Image
 import queue
 
 # Set page config
-st.set_page_config(layout="wide", page_title="AI Object Detection", page_icon="🔍")
+st.set_page_config(layout="wide", page_title="Detectify - AI Object Detection", page_icon="🔍")
 
 # YOLO Model
 @st.cache_resource
@@ -43,7 +43,7 @@ np.random.seed(42)
 colors = {name: tuple(map(int, np.random.randint(0, 255, 3))) for name in classNames}
 
 st.title("AI-Powered Object Detection")
-st.markdown("Detect objects in images or through your webcam using state-of-the-art AI technology.")
+st.markdown("Detect objects in images or through your webcam using AI technology.")
 
 # Sidebar
 st.sidebar.title("Settings")
