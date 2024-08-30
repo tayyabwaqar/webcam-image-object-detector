@@ -81,8 +81,10 @@ selected_classes = st.sidebar.multiselect("Select classes to detect", classNames
 option = st.radio("Select input source:", ("Upload Image", "Use Webcam"),
                   help="Choose whether to upload an image or use your webcam for object detection")
 
-def process_frame(frame, results):
+def process_frame(frame):
+    results = model(frame, stream=True)
     detections = {}
+    
     for r in results:
         boxes = r.boxes
         for box in boxes:
