@@ -142,4 +142,4 @@ elif option == "Upload Image":
 
 # Add footer
 st.markdown("---")
-st.markdown("Developed using Streamlit and YOLOv8")
+st.markdown("Developed using Streamlit and YOLO")
