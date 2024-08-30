@@ -4,6 +4,11 @@
 
 The **AI-Powered Object Detection App** is a web application built with Streamlit and YOLOv8, designed for real-time object detection in images and video streams. This app leverages AI technology to identify and label various objects in both uploaded images and live webcam feeds.
 
+## Live Demo
+
+You can try the live demo of the application at the following link: 
+[Live Demo - Detectify](https://detectifyai.streamlit.app/)
+
 ## Key Features
 
 - **Real-Time Detection**: Utilize your webcam to detect and classify objects in real-time, with instant feedback on detected items.
