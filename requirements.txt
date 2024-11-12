@@ -6,3 +6,4 @@ pandas
 ultralytics
 streamlit-webrtc
 av
+streamlit-camera-input-live
